@@ -1,3 +1,5 @@
+extern int readcount;
+
 struct buf;
 struct context;
 struct file;

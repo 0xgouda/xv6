@@ -42,6 +42,12 @@ sys_getpid(void)
   return myproc()->pid;
 }
 
+int 
+sys_getreadcount(void)
+{
+  return readcount;
+}
+
 int
 sys_sbrk(void)
 {
