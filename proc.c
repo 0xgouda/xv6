@@ -9,6 +9,7 @@
 #include "pstat.h"
 
 int readcount = 0;
+int highest_ticket = INIT_TICKETS;
 
 struct {
   struct spinlock lock;
@@ -40,6 +41,18 @@ int sys_getpinfo(void)
     idx++;
   }
 
+  return 0;
+}
+
+int sys_settickets(void)
+{
+  int number;
+  if (argint(0, &number) && number <= MAX_TICKETS){ 
+    highest_ticket -= myproc()->tickets;
+    myproc()->tickets = number;
+    highest_ticket += number;
+    return -1;
+  }
   return 0;
 }
 
@@ -250,6 +263,7 @@ fork(void)
   np->state = RUNNABLE;
   np->tickets = curproc->tickets;
   np->ticks = 0;
+  highest_ticket += np->tickets;
 
   release(&ptable.lock);
 

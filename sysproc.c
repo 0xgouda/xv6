@@ -49,16 +49,6 @@ sys_getreadcount(void)
   return readcount;
 }
 
-int sys_settickets(void)
-{
-  int number;
-  if (argint(0, &number) && number <= MAX_TICKETS){ 
-    myproc()->tickets = number;
-    return -1;
-  }
-  return 0;
-}
-
 int
 sys_sbrk(void)
 {
