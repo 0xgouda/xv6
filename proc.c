@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "pstat.h"
 
 int readcount = 0;
 
@@ -13,6 +14,34 @@ struct {
   struct spinlock lock;
   struct proc proc[NPROC];
 } ptable;
+
+int sys_getpinfo(void)
+{
+  struct pstat *procstat;
+  int n;
+
+  if (argptr(0, &procstat, n) < 0) 
+  {
+    return -1;
+  }
+
+  int idx = 0;
+  for(struct proc *p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  {
+    if (p->state != UNUSED) {
+      procstat->inuse[idx] = 1;
+      procstat->tickets[idx] = p->tickets;
+      procstat->pid[idx] = p->pid;
+      procstat->ticks[idx] = p->ticks;
+    } else {
+      procstat->inuse[idx] = 0;
+    }
+
+    idx++;
+  }
+
+  return 0;
+}
 
 static struct proc *initproc;
 
@@ -151,6 +180,8 @@ userinit(void)
   acquire(&ptable.lock);
 
   p->state = RUNNABLE;
+  p->ticks = 0;
+  p->tickets = INIT_TICKETS;
 
   release(&ptable.lock);
 }
@@ -217,6 +248,8 @@ fork(void)
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
+  np->tickets = curproc->tickets;
+  np->ticks = 0;
 
   release(&ptable.lock);
 

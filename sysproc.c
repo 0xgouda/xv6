@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "pstat.h"
 
 int
 sys_fork(void)
@@ -50,9 +51,11 @@ sys_getreadcount(void)
 
 int sys_settickets(void)
 {
-  if (number > 0)
-    myproc()->tickets++;
-    return 1;
+  int number;
+  if (argint(0, &number) && number <= MAX_TICKETS){ 
+    myproc()->tickets = number;
+    return -1;
+  }
   return 0;
 }
 
