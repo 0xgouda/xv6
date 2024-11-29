@@ -342,11 +342,11 @@ scheduler(void)
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       c->proc = p;
-      switchuvm(p);
+      switchuvm(p); // change the page directory register
       p->state = RUNNING;
 
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
+      swtch(&(c->scheduler), p->context); // saves the **context and restores & runs the *context
+      switchkvm(); // change the page directory register to the kernel page dir
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.

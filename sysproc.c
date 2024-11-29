@@ -48,6 +48,14 @@ sys_getreadcount(void)
   return readcount;
 }
 
+int sys_settickets(void)
+{
+  if (number > 0)
+    myproc()->tickets++;
+    return 1;
+  return 0;
+}
+
 int
 sys_sbrk(void)
 {
