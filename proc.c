@@ -9,7 +9,39 @@
 #include "pstat.h"
 
 int readcount = 0;
-int highest_ticket = INIT_TICKETS;
+
+// the random & randomrange source = https://github.com/joonlim/xv6/blob/master/random.c
+// Return a integer between 0 and ((2^32 - 1) / 2), which is 2147483647.
+uint
+random(void)
+{
+  // Take from http://stackoverflow.com/questions/1167253/implementation-of-rand
+  static unsigned int z1 = 12345, z2 = 12345, z3 = 12345, z4 = 12345;
+  unsigned int b;
+  b  = ((z1 << 6) ^ z1) >> 13;
+  z1 = ((z1 & 4294967294U) << 18) ^ b;
+  b  = ((z2 << 2) ^ z2) >> 27; 
+  z2 = ((z2 & 4294967288U) << 2) ^ b;
+  b  = ((z3 << 13) ^ z3) >> 21;
+  z3 = ((z3 & 4294967280U) << 7) ^ b;
+  b  = ((z4 << 3) ^ z4) >> 12;
+  z4 = ((z4 & 4294967168U) << 13) ^ b;
+
+  return (z1 ^ z2 ^ z3 ^ z4) / 2;
+}
+
+// Return a random integer between a given range.
+int
+randomrange(int lo, int hi)
+{
+  if (hi < lo) {
+    int tmp = lo;
+    lo = hi;
+    hi = tmp;
+  }
+  int range = hi - lo + 1;
+  return random() % (range) + lo;
+}
 
 struct {
   struct spinlock lock;
@@ -47,13 +79,11 @@ int sys_getpinfo(void)
 int sys_settickets(void)
 {
   int number;
-  if (argint(0, &number) && number <= MAX_TICKETS){ 
-    highest_ticket -= myproc()->tickets;
+  if (argint(0, &number) == 0){ 
     myproc()->tickets = number;
-    highest_ticket += number;
-    return -1;
+    return 0;
   }
-  return 0;
+  return -1;
 }
 
 static struct proc *initproc;
@@ -195,6 +225,7 @@ userinit(void)
   p->state = RUNNABLE;
   p->ticks = 0;
   p->tickets = INIT_TICKETS;
+  
 
   release(&ptable.lock);
 }
@@ -263,7 +294,6 @@ fork(void)
   np->state = RUNNABLE;
   np->tickets = curproc->tickets;
   np->ticks = 0;
-  highest_ticket += np->tickets;
 
   release(&ptable.lock);
 
@@ -380,27 +410,49 @@ scheduler(void)
     sti();
 
     // Loop over process table looking for process to run.
+    struct proc *runnable[NPROC]; 
+    int runnable_num = 0;
+    int runnable_tickets_sum = 0;
+
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
-
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p); // change the page directory register
-      p->state = RUNNING;
-
-      swtch(&(c->scheduler), p->context); // saves the **context and restores & runs the *context
-      switchkvm(); // change the page directory register to the kernel page dir
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if(p->state == RUNNABLE && p->kstack != 0) {
+        runnable_tickets_sum += p->tickets;
+        runnable[runnable_num] = p;
+        runnable_num++;
+      }
     }
-    release(&ptable.lock);
 
+    if (runnable_num == 0) {
+      release(&ptable.lock);
+      continue;
+    }
+
+    int rand_number = randomrange(0, runnable_tickets_sum);
+    int prefix_sum = 0; 
+    for (int i = 0; i < runnable_num; i++) {
+      p = runnable[i];
+      if (rand_number >= prefix_sum && rand_number < prefix_sum + p->tickets){
+        break;
+      }
+      prefix_sum += p->tickets;
+    }
+
+    // Switch to chosen process.  It is the process's job
+    // to release ptable.lock and then reacquire it
+    // before jumping back to us.
+    c->proc = p;
+    switchuvm(p); // change the page directory register
+    p->state = RUNNING;
+
+    p->ticks++;
+    swtch(&(c->scheduler), p->context); // saves the **context and restores & runs the *context
+    switchkvm(); // change the page directory register to the kernel page dir
+
+    // Process is done running for now.
+    // It should have changed its p->state before coming back.
+    c->proc = 0;
+    release(&ptable.lock);
   }
 }
 

@@ -12,4 +12,4 @@
 #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
 #define FSSIZE       1000  // size of file system in blocks
 #define INIT_TICKETS 10 // the inital tickets for the inti process
-#define MAX_TICKETS 100 // the maxmium number of tickets a process can have
+#define MAX_TICKETS 500 // the maxmium number of tickets a process can have
