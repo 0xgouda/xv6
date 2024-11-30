@@ -17,7 +17,7 @@ main(int argc, char *argv[])
     int x = 0;
     for(i=1; i < atoi(argv[1]); i++) {
       x += 1;
-      printf(1, "process with %s runs\n", argv[2]);
+      printf(1, "process with %s tickets is running\n", argv[2]);
     }
   }
   exit();

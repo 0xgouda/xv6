@@ -79,7 +79,7 @@ int sys_getpinfo(void)
 int sys_settickets(void)
 {
   int number;
-  if (argint(0, &number) == 0){ 
+  if (argint(0, &number) == 0 && number < MAX_TICKETS){ 
     myproc()->tickets = number;
     return 0;
   }
