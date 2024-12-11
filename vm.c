@@ -54,6 +54,16 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
   return &pgtab[PTX(va)];
 }
 
+uint addr_translate(void *va)
+{ 
+  pte_t *PTE = walkpgdir(myproc()->pgdir, va, 0);
+  if (PTE != 0 && (*PTE & PTE_P)) {
+    uint phys_addr = PTE_ADDR(*PTE);
+    return phys_addr | ((uint) va & 0xFFF);
+  }
+  return 0;
+}
+
 // Create PTEs for virtual addresses starting at va that refer to
 // physical addresses starting at pa. va and size might not
 // be page-aligned.

@@ -14,6 +14,7 @@ This repository contains my implementation for [OSTEP xv6 Kernel Projcts](https:
         - Process ID.
         - Number of lotteries won.
     - `test_lottery [time-to-run] [tickets-num]` command is provided to test the scheduler
+
         ```bash
         test_lottery 100 1 &; test_lottery 100 100
         

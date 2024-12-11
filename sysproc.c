@@ -21,6 +21,15 @@ sys_exit(void)
   return 0;  // not reached
 }
 
+uint sys_v2paddr(void) {
+  void *va;
+  if (argptr(0, &va, sizeof(void *)) < 0) {
+    return 0;
+  }
+
+  return addr_translate(va);
+}
+
 int
 sys_wait(void)
 {
