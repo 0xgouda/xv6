@@ -11,7 +11,7 @@ main(int argc, char *argv[])
     if (!phys_addr) {
       printf(1, "Invalid Virtual Address\n");
     }
-    printf(1, "Physical Address Of 0x%d: %d\n", i, phys_addr);
+    printf(1, "Physical Address Of %d: %d\n", i, phys_addr);
   }
   exit();
 }

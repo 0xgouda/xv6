@@ -24,6 +24,20 @@ This repository contains my implementation for [OSTEP xv6 Kernel Projcts](https:
         ...
         process with 1 tickets is running
         ```
+3. Added `v2paddr(void *va)` system call used to get the physical address that a given virtual address maps to
+    - `test_v2p [virtual-addresses-range-start] [virtual-addresses-range-end]` command is provided to test it
+
+        ```bash
+        $ test_v2p 10000 10010
+        Physical Address Of 10001: 234309393
+        Physical Address Of 10000: 234309392
+        ...
+        Physical Address Of 10009: 234309401
+
+        $ test_v2p 100000 100010
+        Invalid Virtual Address
+        Invalid Virtual Address
+        ...
 ## Usage
 - Prerequisites: `make qemu gcc`
 - Build
